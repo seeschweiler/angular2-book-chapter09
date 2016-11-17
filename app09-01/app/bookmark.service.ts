@@ -1,35 +1,34 @@
-import {Injectable}     from 'angular2/core';
-import {Http, Response} from 'angular2/http';
-import {Headers, RequestOptions} from 'angular2/http';
-import {Bookmark}       from './bookmark';
-import {Observable}     from 'rxjs/Observable';
-import 'rxjs/Rx';
+import { Injectable }     from '@angular/core';
+import { Headers, Http }  from '@angular/http';
+
+import 'rxjs/add/operator/toPromise';
+
+import { Bookmark }       from './bookmark';
 
 @Injectable()
 export class BookmarkService {
-  constructor(private http:Http) {
+  private headers = new Headers({'Content-Type': 'application/json'});
+  private bookmarksUrl = 'http://localhost:8080/api/bookmarks';
 
+  constructor(private http: Http) { }
+
+  getBookmarks(): Promise<Bookmark[]> {
+    return this.http.get(this.bookmarksUrl)
+               .toPromise()
+               .then(response => response.json() as Bookmark[])
+               .catch(this.handleError);
   }
 
-  private _bookmarksUrl = 'http://localhost:8080/api/bookmarks';
-
-  getBookmarks() {
-    return this.http.get(this._bookmarksUrl)
-                    .map(res => <Bookmark[]> res.json())
-                    .catch(this.handleError);
+  addBookmark(title: string, url: string) : Promise<Bookmark> {
+    return this.http
+      .post(this.bookmarksUrl, JSON.stringify({ "title": title, "url": url }), {headers: this.headers})
+      .toPromise()
+      .then(res => res.json())
+      .catch(this.handleError);
   }
 
-  addBookmark(title: string, url: string) : Observable<Bookmark> {
-    let body = JSON.stringify({ "title": title, "url": url });
-    let headers = new Headers({ 'Content-Type': 'application/json'});
-    let options = new RequestOptions({ headers: headers });
-    return this.http.post(this._bookmarksUrl, body, options)
-      .map(res => <Bookmark> res.json())
-      .catch(this.handleError)
-  }
-
-  private handleError (error: Response) {
-    console.error(error);
-    return Observable.throw(error.json().error || 'Server error');
+  private handleError (error: any): Promise<any> {
+    console.error('An error occurred', error);
+    return Promise.reject(error.message || error);
   }
 }

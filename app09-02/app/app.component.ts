@@ -1,13 +1,15 @@
-import {Component} from 'angular2/core';
-import {BookmarkService} from './bookmark.service';
-import {Bookmark} from './bookmark';
+import { Component, OnInit }  from '@angular/core';
+import { Bookmark }           from './bookmark';
+import { BookmarkService }    from './bookmark.service';
+import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/catch';
 
 @Component({
    selector: 'my-app',
    template: `
    <h3>My Bookmarks:</h3>
    <ul>
-     <li *ngFor="#bookmark of bookmarks">
+     <li *ngFor="let bookmark of bookmarks">
        <strong>{{ bookmark.title }}</strong> - (<a href="{{bookmark.url}}">{{bookmark.url}}</a>)
      </li>
    </ul>
@@ -33,33 +35,35 @@ import {Bookmark} from './bookmark';
 
    </div>
    `,
-   styles: ['.error {color:red;}'],
-   providers: [BookmarkService]
+   styles: ['.error {color:red;}']
 })
 export class AppComponent {
   bookmarks: Bookmark[];
   errorMessage: string;
 
-  constructor(private _bookmarkService: BookmarkService){
-  }
+  constructor(private bookmarkService: BookmarkService){}
 
   ngOnInit() {
     this.getBookmarks();
   }
 
   getBookmarks() {
-    this._bookmarkService.getBookmarks()
-                          .then(
-                            bookmarks => this.bookmarks = bookmarks,
-                            error => this.errorMessage = <any> error
-                          );
+    this.bookmarkService.getBookmarks()
+                        .subscribe(
+                          bookmarks => this.bookmarks = bookmarks,
+                          error => this.errorMessage = <any> error
+                        );
   }
 
   addBookmark(title: string, url: string) {
     if (!title || !url) {return;}
-    this._bookmarkService.addBookmark(title, url)
-                          .then(
-                            bookmark => this.bookmarks.push(bookmark),
-                            error => this.errorMessage = <any>error); 
+        console.log("addBookmark in AppComponent");
+        console.log("title: " + title);
+        console.log("url: " + url);
+        this.bookmarkService.addBookmark(title, url)
+                              .subscribe(
+                                bookmark => this.bookmarks.push(bookmark),
+                                error => this.errorMessage = <any>error
+                              );
   }
 }
